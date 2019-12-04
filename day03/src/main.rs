@@ -4,9 +4,9 @@ use std::collections::HashSet;
 fn main() {
     let input = "input.txt";
     let contents = fs::read_to_string(input).expect("Error reading input");
-    let lines:Vec<&str> = contents.lines().collect();
-    let line1 = to_line(lines[0]);
-    let line2 = to_line(lines[1]);
+    let mut lines = contents.lines();
+    let line1 = to_line(lines.next().unwrap());
+    let line2 = to_line(lines.next().unwrap());
 
     let line1_coords = trace_line(line1);
     let line2_coords = trace_line(line2);
