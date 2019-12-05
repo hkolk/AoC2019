@@ -13,15 +13,15 @@ fn main() {
 
 fn part1(memory: &Vec<isize>, forealz: bool) {
     let (final_state, output) = if forealz {
-        run(memory, &vec![1])
+        run(memory, &vec![5])
     } else {
-        run(memory,  &vec![1])
+        run(memory,  &vec![5])
     };
     if !forealz {
         println!("memory: {:?}", final_state);
         println!("output: {:?}", output);
     }
-    println!("Part 1 answer: {:?}", output.last())
+    println!("Part 1 answer: {:?}", output.last().unwrap())
 }
 
 
@@ -58,6 +58,40 @@ fn run(original_memory: &Vec<isize>, original_input: &Vec<isize>) -> (Vec<isize>
             4 => {
                 output.push(memory[memory[iptr+1] as usize]);
                 iptr += 2;
+            }
+            5 => {
+                let val1 = if (memory[iptr] / 100) % 10 == 1 { memory[iptr + 1] } else {memory[memory[iptr + 1] as usize]};
+                let val2 = if (memory[iptr] / 1000) % 10 == 1 { memory[iptr + 2] } else {memory[memory[iptr + 2] as usize]};
+                if val1 > 0 {
+                    iptr = val2 as usize;
+                } else {
+                    iptr += 3;
+                }
+            }
+            6 => {
+                let val1 = if (memory[iptr] / 100) % 10 == 1 { memory[iptr + 1] } else {memory[memory[iptr + 1] as usize]};
+                let val2 = if (memory[iptr] / 1000) % 10 == 1 { memory[iptr + 2] } else {memory[memory[iptr + 2] as usize]};
+                if val1 == 0 {
+                    iptr = val2 as usize;
+                } else {
+                    iptr += 3;
+                }
+            }
+            7 => {
+                let dest = memory[iptr + 3] as usize;
+                let val1 = if (memory[iptr] / 100) % 10 == 1 { memory[iptr + 1] } else {memory[memory[iptr + 1] as usize]};
+                let val2 = if (memory[iptr] / 1000) % 10 == 1 { memory[iptr + 2] } else {memory[memory[iptr + 2] as usize]};
+
+                memory[dest] = if val1 < val2 { 1 } else { 0 };
+                iptr += 4;
+            }
+            8 => {
+                let dest = memory[iptr + 3] as usize;
+                let val1 = if (memory[iptr] / 100) % 10 == 1 { memory[iptr + 1] } else {memory[memory[iptr + 1] as usize]};
+                let val2 = if (memory[iptr] / 1000) % 10 == 1 { memory[iptr + 2] } else {memory[memory[iptr + 2] as usize]};
+
+                memory[dest] = if val1 == val2 { 1 } else { 0 };
+                iptr += 4;
             }
             99 => {
                 break;
