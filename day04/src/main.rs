@@ -36,7 +36,7 @@ fn test_consecutive_same(subject : &Vec<i32>) -> bool {
 }
 
 fn count_item_in(subject: &Vec<i32>, item: i32) -> u32 {
-    return (*subject).iter().fold(0, |acc, x| if *x == item { acc + 1} else { acc });
+    return (subject).iter().fold(0, |acc, x| if *x == item { acc + 1} else { acc });
 }
 
 fn test_consecutive_constraint(subject : &Vec<i32>) -> bool {
