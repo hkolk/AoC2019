@@ -1,3 +1,4 @@
+use permutohedron::heap_recursive;
 use std::fs;
 
 fn main() {
@@ -8,21 +9,39 @@ fn main() {
     //println!("{:?}", memory);
     //println!("{:#?}", memory);
     part1(&memory);
-    part2(&memory);
 }
 
 fn part1(memory: &Vec<isize>) {
-    let (final_state, output) = run(memory,  &vec![1]);
-    println!("memory: {:?}", final_state);
-    println!("output: {:?}", output);
-    println!("Part 1 answer: {:?}", output.last().unwrap())
-}
+    let mut data = [0, 1, 2, 3, 4];
+    let mut permutations = Vec::new();
+    heap_recursive(&mut data, |permutation| {
+        permutations.push(permutation.to_vec())
+    });
 
-fn part2(memory: &Vec<isize>) {
+    let mut max_output = 0;
+    let mut max_phases = Vec::new();
+
+    for phases in permutations {
+        let mut prev_output = 0;
+        for i in 0..5 {
+            let input = vec![phases[i], prev_output];
+            let (final_state, output) = run(memory,  &input);
+            prev_output = *output.last().unwrap();
+        }
+        if(prev_output > max_output) {
+            max_output = prev_output;
+            max_phases = phases.clone();
+        }
+        println!("Phases {:?} generated {:?}", phases, prev_output);
+    }
+    println!("Max Phases {:?} generated {:?}", max_phases, max_output);
+
+    /*
     let (final_state, output) = run(memory,  &vec![5]);
     println!("memory: {:?}", final_state);
     println!("output: {:?}", output);
-    println!("Part 2 answer: {:?}", output.last().unwrap())
+    println!("Part 1 answer: {:?}", output.last().unwrap())
+    */
 }
 
 
