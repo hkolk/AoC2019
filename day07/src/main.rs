@@ -10,43 +10,57 @@ fn main() {
 
     //println!("{:?}", memory);
     //println!("{:#?}", memory);
-    //part1(&memory);
-    part1_again(&memory);
+    part1(&memory);
+    part2(&memory);
 }
 
-fn part1_again(memory: &Vec<isize>) {
+fn part2(memory: &Vec<isize>) {
     //let data = [3, 1, 4, 2, 0];
-    let data = [9,7,8,5,6];
-    
+    let mut data = [5, 6, 7, 8, 9];
+    let mut permutations = Vec::new();
+    heap_recursive(&mut data, |permutation| {
+        permutations.push(permutation.to_vec())
+    });
 
-    let mut computers = VecDeque::from(data.to_vec().into_iter().map(|phase| IntComputer::new(memory, &vec![phase])).collect::<Vec<_>>());
-    let mut prev_value = 0;
-    let mut running = computers.len();
-    while computers.len() > 0 {
-        let mut computer = computers.pop_front().unwrap();
-        computer.add_input(prev_value);
-        println!("beginning next one at {:?}", computer);
-        let mut new_computer = computer.run();
-        match new_computer.state {
-            State::Halted => {
-                println!("Halted");
-                computers.push_back(computer);
-                prev_value = new_computer.output.pop().unwrap();
-            }
-            State::Terminated => {
-                println!("Terminated");
-                prev_value = computer.output.pop().unwrap();
-                running -= 1;
-                if running == 0 {
-                    break;
+    let mut max_output = 0;
+    let mut max_phases = Vec::new();
+
+    for phases in permutations {
+        let mut computers = VecDeque::from(phases.to_vec().into_iter().map(|phase| IntComputer::new(memory, &vec![phase])).collect::<Vec<_>>());
+        let mut prev_value = 0;
+        let mut running = computers.len();
+        while computers.len() > 0 {
+            let mut computer = computers.pop_front().unwrap();
+            computer.add_input(prev_value);
+            //println!("beginning next one at {:?}", computer);
+            let mut new_computer = computer.run();
+            match new_computer.state {
+                State::Halted => {
+                    //println!("Halted");
+                    computers.push_back(computer);
+                    prev_value = new_computer.output.pop().unwrap();
+                }
+                State::Terminated => {
+                    //println!("Terminated");
+                    prev_value = computer.output.pop().unwrap();
+                    running -= 1;
+                    if running == 0 {
+                        break;
+                    }
+                }
+                _ => {
+                    panic!();
                 }
             }
-            _ => {
-                panic!();
-            }
+        }
+        //println!("Final value: {:?}", prev_value);
+        if prev_value > max_output {
+            max_output = prev_value;
+            max_phases = phases.clone();
         }
     }
-    println!("Final value: {:?}", prev_value)
+    println!("Part 2: Max Phases {:?} generated {:?}", max_phases, max_output);
+
 
     /*
     let (final_state, output) = run(memory,  &vec![5]);
@@ -70,16 +84,16 @@ fn part1(memory: &Vec<isize>) {
         let mut prev_output = 0;
         for i in 0..5 {
             let input = VecDeque::from(vec![phases[i], prev_output]);
-            let (final_state, output) = run(memory,  &input);
+            let (_final_state, output) = run(memory,  &input);
             prev_output = *output.last().unwrap();
         }
-        if(prev_output > max_output) {
+        if prev_output > max_output {
             max_output = prev_output;
             max_phases = phases.clone();
         }
-        println!("Phases {:?} generated {:?}", phases, prev_output);
+        //println!("Phases {:?} generated {:?}", phases, prev_output);
     }
-    println!("Max Phases {:?} generated {:?}", max_phases, max_output);
+    println!("Part 1: Max Phases {:?} generated {:?}", max_phases, max_output);
 
     /*
     let (final_state, output) = run(memory,  &vec![5]);
@@ -155,8 +169,8 @@ impl IntComputer {
                     self.output.push(get_val1(&self.memory, self.iptr));
                     self.iptr += 2;
                     // halting state
-                    println!("[{:?}] Halting because I just pushed data, which was {:?}", self.phase, self.output);
-                    println!("{:?}", self);
+                    //println!("[{:?}] Halting because I just pushed data, which was {:?}", self.phase, self.output);
+                    //println!("{:?}", self);
                     self.state = State::Halted;
                     break;
                 }
