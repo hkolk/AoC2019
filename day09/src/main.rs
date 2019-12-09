@@ -1,4 +1,3 @@
-use permutohedron::heap_recursive;
 use std::fs;
 use std::panic::{self, AssertUnwindSafe};
 use std::collections::VecDeque;
@@ -11,67 +10,27 @@ fn main() {
     //println!("{:?}", memory);
     //println!("{:#?}", memory);
     part1(&memory);
-    part2(&memory);
 }
 
 fn part1(memory: &Vec<isize>) {
-    run_permutations(memory, vec![0, 1, 2, 3, 4])
+    let mut computer = IntComputer::new(memory, &Vec::new());
+    computer.run();
+    println!("Output: {:?}", computer.output)
+
 }
-
-fn part2(memory: &Vec<isize>) {
-    run_permutations(memory, vec![5, 6, 7, 8, 9])
-}
-
-fn run_permutations(memory: &Vec<isize>, phase_options: Vec<isize>) {
-    let mut data = phase_options.clone();
-    let mut permutations = Vec::new();
-    heap_recursive(&mut data, |permutation| {
-        permutations.push(permutation.to_vec())
-    });
-
-    let mut max_output = 0;
-    let mut max_phases = Vec::new();
-
-    for phases in permutations {
-        let mut computers = VecDeque::from(phases.to_vec().into_iter().map(|phase| IntComputer::new(memory, &vec![phase])).collect::<Vec<_>>());
-        let mut prev_value = 0;
-        let mut running = computers.len();
-        while computers.len() > 0 {
-            let mut computer = computers.pop_front().unwrap();
-            computer.add_input(prev_value);
-
-            let mut new_computer = computer.run();
-            match new_computer.state {
-                State::Halted => {
-                    computers.push_back(computer);
-                    prev_value = new_computer.output.pop().unwrap();
-                }
-                State::Terminated => {
-                    prev_value = computer.output.pop().unwrap();
-                    running -= 1;
-                    if running == 0 {
-                        break;
-                    }
-                }
-                _ => {
-                    panic!();
-                }
-            }
-        }
-        if prev_value > max_output {
-            max_output = prev_value;
-            max_phases = phases.clone();
-        }
-    }
-    println!("Answer for input: {:?}: generated max output {:?} with phases {:?}", phase_options, max_output, max_phases);
-}
-
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum State {
     Running,
     Halted,
     Terminated
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum Mode {
+    Position,
+    Immediate,
+    Relative
 }
 
 #[derive(Clone, Debug)]
@@ -81,7 +40,8 @@ struct IntComputer {
     input: VecDeque<isize>,
     output: Vec<isize>,
     state: State,
-    phase: isize
+    phase: isize,
+    relative_base: isize
 }
 
 impl IntComputer {
@@ -92,7 +52,8 @@ impl IntComputer {
             input: VecDeque::from(initial_input.clone()),
             output: Vec::new(),
             state: State::Running,
-            phase: initial_input.first().unwrap_or(&-1).clone()
+            phase: initial_input.first().unwrap_or(&-1).clone(),
+            relative_base: 0
         };
     }
 
@@ -132,9 +93,6 @@ impl IntComputer {
                 4 => {
                     self.output.push(get_val1(&self.memory, self.iptr));
                     self.iptr += 2;
-                    // halting state
-                    //self.state = State::Halted;
-                    //break;
                 }
                 5 => {
                     self.iptr = if get_val1(&self.memory, self.iptr) > 0 { get_val2(&self.memory, self.iptr) as usize } else { self.iptr + 3 };
@@ -153,6 +111,11 @@ impl IntComputer {
                     self.memory[dest] = if get_val1(&self.memory, self.iptr) == get_val2(&self.memory, self.iptr) { 1 } else { 0 };
                     self.iptr += 4;
                 }
+                9 => {
+                    self.relative_base += get_val1(&self.memory, self.iptr);
+                    self.iptr += 2;
+
+                }
                 99 => {
                     self.state = State::Terminated;
                     break;
@@ -165,18 +128,26 @@ impl IntComputer {
 }
 
 fn get_val1(memory: &Vec<isize>, iptr: usize) -> isize {
-    return get_parameter(&memory, iptr+1, is_immediate(memory[iptr], 1));
+    return get_parameter(&memory, iptr+1, get_parameter_mode(memory[iptr], 1));
 }
 
 fn get_val2(memory: &Vec<isize>, iptr: usize) -> isize {
-    return get_parameter(&memory, iptr+2, is_immediate(memory[iptr], 2));
+    return get_parameter(&memory, iptr+2, get_parameter_mode(memory[iptr], 2));
 }
 
-fn get_parameter(memory: &Vec<isize>, loc: usize, immediate: bool) -> isize {
-    return if immediate { memory[loc] } else {memory[memory[loc] as usize]};
+fn get_parameter(memory: &Vec<isize>, loc: usize, mode: Mode) -> isize {
+    return match mode {
+        Mode::Position => memory[memory[loc] as usize],
+        Mode::Immediate => memory[loc],
+        Mode::Relative => panic!("Unimplemented!")
+    }
 }
 
-fn is_immediate(opcode: isize, param: u32) -> bool {
-    return opcode / 10_isize.pow(param + 1) % 10 == 1
-
+fn get_parameter_mode(opcode: isize, param: u32) -> Mode {
+    return match opcode / 10_isize.pow(param + 1) % 10 {
+        0 => Mode::Position,
+        1 => Mode::Immediate,
+        2 => Mode::Relative,
+        _ => panic!()
+    };
 }
