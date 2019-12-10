@@ -55,6 +55,21 @@ fn main() {
     println!("[Part2] Roid 200 = {:?}, code: {:?}", &visible[199], &visible[199].x * 100 + &visible[199].y);
 }
 
+
+#[test]
+fn test_angle() {
+    println!("  0, -10, expect   0 pi: {:#}", angle(  0, -10));
+    println!(" 10, -10, expect 1/4 pi: {:#}", angle( 10, -10));
+    println!(" 10,   0: expect 1/2 pi: {:#}", angle( 10,   0));
+    println!(" 10,  10: expect 3/4 pi: {:#}", angle( 10,  10));
+    println!("  0,  10: expect   1 pi: {:#}", angle(  0,  10));
+    println!("-10,  10, expect 5/4 pi: {:#}", angle(-10,  10));
+    println!("-10,   0: expect 6/2 pi: {:#}", angle(-10,   0));
+    println!("-10, -10: expect 7/4 pi: {:#}", angle(-10, -10));
+    println!(" -1, -10: expect   2 pi: {:#}", angle( -1, -10));
+
+}
+
 fn angle(x: isize, y: isize) -> f64 {
     let x: f64 = x as f64;
     let y: f64 = y as f64;
