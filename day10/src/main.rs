@@ -1,5 +1,5 @@
 use std::fs;
-use ndarray::Array;
+use std::f64;
 
 fn main() {
     let input = "input.txt";
@@ -35,33 +35,53 @@ fn main() {
                 visible_asteroids += 1;
             }
         }
-        println!("Asterroid at {:?} can see {:?} other asteroids!", asteroid, visible_asteroids);
+        //println!("Asteroid at {:?} can see {:?} other asteroids!", asteroid, visible_asteroids);
         if visible_asteroids > best_asteroid_count {
             best_asteroid = asteroid;
             best_asteroid_count = visible_asteroids;
         }
     }
-    println!("!! Best asterroid at {:?} can see {:?} other asteroids!", best_asteroid, best_asteroid_count);
+    println!("[Part1] !! Best asteroid at {:?} can see {:?} other asteroids!", best_asteroid, best_asteroid_count);
 
+    let station = best_asteroid.clone();
+    let mut visible = visible_asteroids(&lines, &asteroids, &station);
+    //println!("Double check: {:?}", visible.len());
 
+    visible.sort_by(|a, b | station.angle(a).partial_cmp(&station.angle(b)).unwrap());
+    //for roid in &visible {
+        //println!("[Station: {:?}] Roid {:?} has angle {:?}", station, roid, station.angle(roid))
+    //}
+    // cheating because I have 284 roids visible
+    println!("[Part2] Roid 200 = {:?}, code: {:?}", &visible[199], &visible[199].x * 100 + &visible[199].y);
+}
 
+fn angle(x: isize, y: isize) -> f64 {
+    let x: f64 = x as f64;
+    let y: f64 = y as f64;
+    let atan2 = x.atan2(y);
+    return (atan2 - f64::consts::PI).abs();
+}
 
-    //let path = Coord{y:0, x:0}.path(&Coord{y:0, x:0});
-    //println!("{:#?}", path);
-
-
-    /*
-    let map = Array::from_shape_vec(
-        (lines.len(), lines.first().unwrap().len()),
-        lines.iter().flatten().collect::<Vec<_>>()
-    ).unwrap();
-    println!("{:#?}", map);
-
-    for ((y, x), item) in map.indexed_iter() {
-        println!("[{},{}] {:?}", y, x, item);
+fn visible_asteroids(map: &Vec<Vec<bool>>, all_asteroids: &Vec<Coord>, from :&Coord) -> Vec<Coord> {
+    let mut visible_asteroids: Vec<Coord> = Vec::new();
+    for other_asteroid in all_asteroids {
+        if other_asteroid == from {
+            // let's not nuke myself
+            continue;
+        }
+        let path = from.path(&other_asteroid);
+        let mut colission = false;
+        for path_coord in path {
+            if map[path_coord.y as usize][path_coord.x as usize] {
+                // colission!
+                colission = true;
+            }
+        }
+        if !colission {
+            visible_asteroids.push(other_asteroid.clone());
+        }
     }
-    map
-    */
+    return visible_asteroids;
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -91,6 +111,13 @@ impl Coord {
             })
         }
         return path;
+    }
+
+    fn angle(&self, other: &Coord) -> f64 {
+        return angle(
+            other.x - self.x,
+            other.y - self.y
+        );
     }
 }
 
