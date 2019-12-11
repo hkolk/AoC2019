@@ -11,7 +11,7 @@ fn main() {
     //println!("{:?}", memory);
     //println!("{:#?}", memory);
     part1(&memory);
-    //part2(&memory);
+    part2(&memory);
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -98,11 +98,11 @@ fn part1(memory: &Vec<isize>) {
         let new_color = Color::from_int(color);
         let entry = panels.entry(location).or_insert(new_color);
         *entry = new_color.clone();
-        println!("Painted {:?} to {:?}", location, new_color);
+        //println!("Painted {:?} to {:?}", location, new_color);
 
         direction = direction.turn(clockwise);
         location = location.do_move(direction);
-        println!("Moved {:?} to new location {:?}", direction, location);
+        //println!("Moved {:?} to new location {:?}", direction, location);
 
         if state.state == State::Terminated {
             break;
@@ -119,13 +119,56 @@ fn part1(memory: &Vec<isize>) {
 }
 
 fn part2(memory: &Vec<isize>) {
+    let mut panels: HashMap<Coord, Color> = HashMap::new();
     let mut computer = IntComputer::new(memory, &Vec::new());
-    computer.add_input(2);
-    computer.run();
-    println!("Part2 Output: {:?}", computer.output)
+
+    let mut location = Coord{x:0, y:0};
+    panels.entry(location).or_insert(Color::White);
+    let mut direction = Direction::Up;
+
+    loop {
+        let current_color = panels.entry(location).or_insert(Color::Black);
+        computer.input.push_back( current_color.to_int());
+        let mut state = computer.run();
+        let clockwise = state.output.pop().unwrap() == 1;
+        let color = state.output.pop().unwrap();
+
+        let new_color = Color::from_int(color);
+        let entry = panels.entry(location).or_insert(new_color);
+        *entry = new_color.clone();
+        //println!("Painted {:?} to {:?}", location, new_color);
+
+        direction = direction.turn(clockwise);
+        location = location.do_move(direction);
+        //println!("Moved {:?} to new location {:?}", direction, location);
+
+        if state.state == State::Terminated {
+            break;
+        }
+    }
+    println!("Part2: panels painted: {:?}", panels.len());
+
+    let (mut min_x, mut max_x, mut min_y, mut max_y) = (0, 0, 0, 0);
+    for (coord, _) in &panels {
+        min_x = min_x.min(coord.x);
+        min_y = min_y.min(coord.y);
+        max_x = max_x.max(coord.x);
+        max_y = max_y.max(coord.y);
+    }
+    for y in min_y..=max_y {
+        for x in min_x..=max_x {
+            let color = panels.get(&Coord{x, y}).unwrap_or(&Color::White);
+            if  color == &Color::White {
+                print!("#");
+            } else {
+                print!(" ");
+            }
+        }
+        println!();
+    }
 }
 
-// intcomputer from her
+// intcomputer from here
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum State {
