@@ -1,7 +1,6 @@
 use std::fs;
 use std::panic::{self, AssertUnwindSafe};
 use std::collections::{VecDeque, HashMap};
-use crate::Direction::{Right, Left};
 
 fn main() {
     let input = "input.txt";
