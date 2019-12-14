@@ -13,7 +13,7 @@ fn main() {
     //println!("{:?}", memory);
     //println!("{:#?}", memory);
     part1(&memory);
-    part2(&memory, true, true);
+    part2(&memory, false, false);
 }
 
 fn part1(program: &Vec<isize>) {

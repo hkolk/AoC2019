@@ -39,6 +39,7 @@ fn main() {
                 }
             }
         }
+
         for moon in moons.iter_mut() {
             (*moon).apply_velocity();
         }
