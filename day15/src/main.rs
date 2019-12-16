@@ -45,6 +45,29 @@ fn main() {
     print_map(&walked_map);
     println!("Part 1: {:?} moves", moves);
 
+
+    let mut oxygen_map = droid.map.clone();
+    oxygen_map.insert(droid.hatch, MapTile::Oxygen);
+    let mut open_tiles = oxygen_map.values().filter(|item| *item == &MapTile::Open).count();
+
+    let mut counter = 0;
+    while open_tiles > 0 {
+        //println!("Open tiles: {:?}", open_tiles);
+        let ro_oxygenmap = oxygen_map.clone();
+        let oxygen_tiles = ro_oxygenmap.iter().filter(|(key, value)| *value == &MapTile::Oxygen).map(|(key, coord)| key).collect::<Vec<_>>();
+        for oxygen_tile in oxygen_tiles {
+            for neighbour in oxygen_tile.neighbours() {
+                if oxygen_map.get(&neighbour).unwrap_or(&MapTile::Wall) == &MapTile::Open {
+                    oxygen_map.insert(neighbour, MapTile::Oxygen);
+                }
+            }
+
+        }
+        counter += 1;
+        open_tiles = oxygen_map.values().filter(|item| *item == &MapTile::Open).count();
+    }
+    print!("Part2: {:?} minutes", counter);
+
 }
 
 fn print_map(map: &HashMap<Coord, MapTile>) {
@@ -170,7 +193,8 @@ enum MapTile {
     Wall,
     Hatch,
     Unexplored,
-    Path
+    Path,
+    Oxygen
 }
 
 impl MapTile {
@@ -180,7 +204,8 @@ impl MapTile {
             MapTile::Wall => "#",
             MapTile::Hatch => "X",
             MapTile::Unexplored => "*",
-            MapTile::Path => "|"
+            MapTile::Path => "|",
+            MapTile::Oxygen => "O"
         }
     }
 }
