@@ -5,6 +5,8 @@ fn main() {
     let contents = fs::read_to_string("input.txt").expect("Error reading input");
     let input = contents.chars().map(|c| c.to_digit(10).unwrap() as isize).collect::<Vec<_>>();
     part1(&input);
+    part2(&input);
+
 }
 fn part1(input_original: &Vec<isize>) {
     let input = input_original.clone();
@@ -26,81 +28,42 @@ fn part1(input_original: &Vec<isize>) {
             //println!("norm: {:?}-{:?}: {:?} (from {:?})", phase, outer_index, result, accu);
             output.push(result);
         }
-        // fast algorithm
-        let mut output_fast: Vec<isize> = Vec::new();
-        let mut output_predicted: Vec<isize> = Vec::new();
-        let mut prevaccu = 0;
-        for outer_index in (0..mutating_input.len()).rev() {
-            let mut accu = 0;
-            for inner_index in ((outer_index)..mutating_input.len()).rev() {
-                let mutator = mutator_for_pos(inner_index, outer_index);
-                let full_value = mutator * mutating_input[inner_index] as isize;
-                //println!("Index-fast: {:?}-{:?}-{:?}, mutator: {:?}, full_value: {:?}", phase, outer_index, inner_index, mutator, full_value);
-                accu += full_value;
-            }
-            let result = accu.abs() % 10;
-            let current = (mutating_input[outer_index] * mutator_for_pos(outer_index, outer_index));
-            prevaccu += current;
-            //println!("fast: {:?}-{:?}: {:?} (from {:?}, predicted: {:?}) from {:?} + {:?}, prevaccu: {:?}, full: {:?}", phase, outer_index, result, accu, (output_fast.iter().sum::<isize>() + current), output_fast.iter().sum::<isize>(), current, prevaccu, output_fast.iter());
-            //println!("fast: {:?}-{:?}: {:?} (from {:?}, predicted: {:?})", phase, outer_index, result, accu, prevaccu);
-            output_fast.push(result);
-            output_predicted.push(prevaccu % 10);
-
-        }
-        //println!("Phase {:?}, output: {:?}", phase, output);
         mutating_input = output.clone();
-        println!("Phase norm      {:2}: {:?}", phase, output.into_iter().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
-        //println!("Phase fast      {:2}: {:?}", phase, output_fast.into_iter().rev().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
-        //println!("Phase predicted {:2}: {:?}", phase, output_predicted.into_iter().rev().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
+        //println!("Phase norm      {:2}: {:?}", phase, output.into_iter().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
 
     }
     println!("Part 1: {:?}", mutating_input.into_iter().take(8).map(|d| d.to_string()).collect::<Vec<String>>().join(""));
 }
 
 fn part2(input_original: &Vec<isize>) {
-    let input = input_original.clone();
+    let offset = input_original.iter().take(7).map(|d| d.to_string()).collect::<Vec<String>>().join("").parse::<usize>().unwrap();
+    //println!("Offset: {:?}", offset);
+    if offset < (input_original.len()*5000) {
+        panic!("too small for fast algo!");
+    }
+
+    let input = input_original.iter().cycle().take(10000 * input_original.len()).skip(offset).map(|i| *i).collect::<Vec<isize>>();
+    //println!("Input: {:?}", input);
+
+    //let input = input_original.clone();
     //println!("{:?}", input);
 
     let mut mutating_input = input.clone();
     for phase in 0..100 {
-        // regular algorithm
-        let mut output: Vec<isize> = Vec::new();
-        for outer_index in 0..mutating_input.len() {
-            let mut accu = 0;
-            for inner_index in 0..mutating_input.len() {
-                let mutator = mutator_for_pos(inner_index, outer_index);
-                let full_value = mutator * mutating_input[inner_index] as isize;
-                //println!("Index-norm: {:?}-{:?}-{:?}, mutator: {:?}, full_value: {:?}", phase, outer_index, inner_index, mutator, full_value);
-                accu += full_value;
-            }
-            let result = accu.abs() % 10;
-            //println!("norm: {:?}-{:?}: {:?} (from {:?})", phase, outer_index, result, accu);
-            output.push(result);
-        }
         // fast algorithm
-        let mut output_fast: Vec<isize> = Vec::new();
         let mut output_predicted: Vec<isize> = Vec::new();
         let mut prevaccu = 0;
         for outer_index in (0..mutating_input.len()).rev() {
-            let mut accu = 0;
-            for inner_index in ((outer_index)..mutating_input.len()).rev() {
-                let mutator = mutator_for_pos(inner_index, outer_index);
-                let full_value = mutator * mutating_input[inner_index] as isize;
-                //println!("Index-fast: {:?}-{:?}-{:?}, mutator: {:?}, full_value: {:?}", phase, outer_index, inner_index, mutator, full_value);
-                accu += full_value;
-            }
-            let result = accu.abs() % 10;
             let current = (mutating_input[outer_index] * mutator_for_pos(outer_index, outer_index));
             prevaccu += current;
             //println!("fast: {:?}-{:?}: {:?} (from {:?}, predicted: {:?}) from {:?} + {:?}, prevaccu: {:?}, full: {:?}", phase, outer_index, result, accu, (output_fast.iter().sum::<isize>() + current), output_fast.iter().sum::<isize>(), current, prevaccu, output_fast.iter());
             //println!("fast: {:?}-{:?}: {:?} (from {:?}, predicted: {:?})", phase, outer_index, result, accu, prevaccu);
-            output_fast.push(result);
             output_predicted.push(prevaccu % 10);
 
         }
         //println!("Phase {:?}, output: {:?}", phase, output);
-        mutating_input = output.clone();
-        println!("Phase norm      {:2}: {:?}", phase, output.into_iter().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
+        mutating_input = output_predicted.clone().into_iter().rev().collect();
+        //println!("Phase norm      {:2}: {:?}", phase, output.into_iter().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
         //println!("Phase fast      {:2}: {:?}", phase, output_fast.into_iter().rev().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
         //println!("Phase predicted {:2}: {:?}", phase, output_predicted.into_iter().rev().map(|d| d.to_string()).collect::<Vec<String>>().join(""));
 
